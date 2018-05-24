@@ -1,6 +1,6 @@
 package com.wavesplatform.atomicswap.bitcoin.coinswap.util
 
-import com.wavesplatform.atomicswap.Params
+import com.wavesplatform.atomicswap.ExchangeParams
 import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
 import org.bitcoinj.core._
 import org.bitcoinj.core.Transaction.SigHash
@@ -12,13 +12,13 @@ import scala.collection.JavaConverters._
 object TransactionsUtil {
   def createXHashUntilTimelockOrToSelfScript(digest: Array[Byte], oppositePublicKey: Array[Byte], timeout: Long, myPublicKey: Array[Byte]): Script = {
     new ScriptBuilder().op(OP_DEPTH).op(OP_2).op(OP_EQUAL).op(OP_IF)
-      .op(OP_HASH160).data(digest).op(OP_EQUALVERIFY).data(oppositePublicKey).op(OP_CHECKSIG)
+      .op(OP_HASH256).data(digest).op(OP_EQUALVERIFY).data(oppositePublicKey).op(OP_CHECKSIG)
       .op(OP_ELSE).number(timeout).op(OP_CHECKLOCKTIMEVERIFY).op(OP_DROP).data(myPublicKey).op(OP_CHECKSIG)
       .op(OP_ENDIF)
       .build
   }
 
-  def sendMoneyFromMultisig(txInputs: Seq[BitcoinInputInfo], v: Coin, outputScript: Script)(implicit p: Params): Transaction = {
+  def sendMoneyFromMultisig(txInputs: Seq[BitcoinInputInfo], v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
     require(txInputs.forall(t => t.outputIndex == txInputs.head.outputIndex && t.script == txInputs.head.script && t.txId == txInputs.head.txId))
     val tx = new Transaction(p.networkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
@@ -33,7 +33,7 @@ object TransactionsUtil {
     tx
   }
 
-  def sendMoneyToScript(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: Params): Transaction = {
+  def sendMoneyToScript(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
     val tx = new Transaction(p.networkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
@@ -44,7 +44,7 @@ object TransactionsUtil {
     tx
   }
 
-  def createBackoutTransactionByTimeout(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: Params): Transaction = {
+  def createBackoutTransactionByTimeout(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
     val tx = new Transaction(p.networkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
@@ -59,7 +59,7 @@ object TransactionsUtil {
     tx
   }
 
-  def createBackoutTransactionByX(txInput: BitcoinInputInfo, v: Coin, x: Array[Byte], outputScript: Script)(implicit p: Params): Transaction = {
+  def createBackoutTransactionByX(txInput: BitcoinInputInfo, v: Coin, x: Array[Byte], outputScript: Script)(implicit p: ExchangeParams): Transaction = {
     val tx = new Transaction(p.networkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
