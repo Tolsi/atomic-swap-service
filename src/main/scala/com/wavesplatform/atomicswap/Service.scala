@@ -3,14 +3,14 @@ package com.wavesplatform.atomicswap
 import com.wavesplatform.atomicswap.atomicexchange.ServiceSide
 import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
 import com.wavesplatform.atomicswap.bitcoin.coinswap.BitcoinSide
-
-import scala.concurrent.duration._
 import com.wavesplatform.atomicswap.bitcoin.util.KeysUtil
-import com.wavesplatform.atomicswap.waves.{AtomicSwapScriptSetScriptTransactionBuilder, WavesSide}
+import com.wavesplatform.atomicswap.waves.WavesSide
 import com.wavesplatform.wavesj._
 import org.bitcoinj.core.{Coin, ECKey, Sha256Hash}
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.script.ScriptBuilder
+
+import scala.concurrent.duration._
 
 object Service extends App {
 
