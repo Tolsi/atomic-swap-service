@@ -1,15 +1,16 @@
 package com.wavesplatform.atomicswap
 
+import com.wavesplatform.atomicswap.atomicexchange.ServiceSide
 import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
+import com.wavesplatform.atomicswap.bitcoin.coinswap.BitcoinSide
 
 import scala.concurrent.duration._
 import com.wavesplatform.atomicswap.bitcoin.util.KeysUtil
-import com.wavesplatform.atomicswap.waves.AtomicSwapScriptSetScriptTransactionBuilder
+import com.wavesplatform.atomicswap.waves.{AtomicSwapScriptSetScriptTransactionBuilder, WavesSide}
 import com.wavesplatform.wavesj._
-import org.bitcoinj.core.{Coin, ECKey, Sha256Hash, Utils}
+import org.bitcoinj.core.{Coin, ECKey, Sha256Hash}
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.script.ScriptBuilder
-import com.wavesplatform.atomicswap.bitcoin.coinswap.util.TransactionsUtil._
 
 object Service extends App {
 
@@ -19,19 +20,17 @@ object Service extends App {
                                bitcoinAmount: Coin,
                                now: Long,
                                currentWavesHeight: Int
-                                                 ): ExchangeParams = ExchangeParams(
-  TestNet3Params.get(),
-  // 0.01 BTC
-  fee = Coin.CENT,
-  timeout = 1 minute,
-  wavesAmount,
-  bitcoinAmount,
-  hashX,
-  now,
-  ConsoleFakeNetwork,
-  currentWavesHeight)
-
-  private val serviceBitcoinPublicKey = Base58.decode("???")
+                             ): ExchangeParams = ExchangeParams(
+    TestNet3Params.get(),
+    // 0.01 BTC
+    fee = Coin.CENT,
+    timeout = 1 minute,
+    wavesAmount,
+    bitcoinAmount,
+    hashX,
+    now,
+    ConsoleFakeNetwork,
+    currentWavesHeight)
 
   private val wavesUser =
     PrivateKeyAccount
@@ -45,7 +44,9 @@ object Service extends App {
   private val bitcoinUserWavesPublicKey = new PublicKeyAccount(Base58.decode("???"), 'T')
 
   private val serviceX = "I don't like alice".getBytes
-  private val serviceWavesPublicKey = new PublicKeyAccount(Base58.decode("???"), 'T')
+  private val serviceWavesPrivateKey = PrivateKeyAccount.fromSeed(Base58.encode("sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author Gewgwegf3d".getBytes), 1, 'T')
+  private val serviceWavesPublicKey = new PublicKeyAccount(serviceWavesPrivateKey.getPublicKey, 'T')
+  private val serviceBitcoinPrivateKey = Base58.decode("???")
 
   private val currentWavesHeight: Int = ???
 
@@ -63,30 +64,23 @@ object Service extends App {
 
   // TX1 - Alice Waves -> scr1 money to tmp account + TX0-1 fee
   // TX1-1 - scr1 set script to tmp account
-  val tx1 = Transaction.makeTransferTx(wavesUser, wavesUserTmpPrivateKey.getAddress, p.wavesAmount, Asset.WAVES, 100000, Asset.WAVES, "")
-  val wavesSwapScript = AtomicSwapScriptSetScriptTransactionBuilder.build(bitcoinUserWavesPublicKey.getAddress, wavesUser.getAddress, wavesUser,
-    p.hashX, currentWavesHeight + 30, wavesUserTmpPrivateKey, 100000, p.startTimestamp)
-  val tx11 = Transaction.makeScriptTx(wavesUserTmpPrivateKey, Base58.encode(wavesSwapScript), 'T', 100000)
+
+  val tx1 = WavesSide.sendMoneyToTempSwapAccount(wavesUser, wavesUserTmpPrivateKey, 100000)
+  val tx1_1 = WavesSide.setSwapScriptOnTempSwapAccount(wavesUserTmpPrivateKey, wavesUser, bitcoinUserWavesPublicKey.getAddress, p.currentWavesHeight + 30, 100000)
+
   // TX2 - Bob Bitcoin -> scr2
-  val T2script = createXHashUntilTimelockOrToSelfScript(p.hashX, wavesUserBitcoinPublicKey, p.startTimestamp + 30.minutes.toSeconds, bitcoinUser.getPubKey)
-  val tx2 = sendMoneyToScript(bitcoinUserBitcoinOutInfo, p.bitcoinAmount, T2script)
+
+  val tx2 = BitcoinSide.createAtomicSwapTransaction(bitcoinUserBitcoinOutInfo, bitcoinUser.getPubKey, wavesUserBitcoinPublicKey, p.startTimestampSeconds + 30.minutes.toSeconds)
 
   // TX3 - Service [normal case] - scr1 -> Bob Waves address
   // TX4 - Service [normal case] - scr1 -> Alice Bitcoin address
 
+  val tx3 = ServiceSide.accomplishBitcoinSwapTransaction(tx2.getHashAsString, tx2.getOutput(0).getScriptPubKey, serviceX, serviceBitcoinPrivateKey, bitcoinUser.getPubKey)
+  val tx4 = ServiceSide.accomplishWavesSwapTransaction(serviceWavesPublicKey, wavesUser, serviceX, 400000)
+
   // TX5 - Service (or someone) [failed case] - scr1 (TX0-1) -> Alice Waves address
   // TX6 - Service (or someone) [failed case] - scr2 (TX1) -> Bob Bitcoin address
 
-//  val (alice1, atc1) = Alice.step1(alicePk, aliceOutInfoBC1, carolPublic).right.get
-//  val (carol2, cta1, ctb1) = Carol.step2(carolPk, carolOutInfoBC2, alicePublic, alicePublic, atc1).right.get
-//  val (bob3, btc1) = Bob.step3(alicePk, bobX, carolPublic, ctb1).right.get
-//  // broadcast tx0 and tx1
-//  val alice4 = Alice.step4(alicePk, cta1, alice1).right.get
-//  val carol5 = Carol.step5(carolPk, carol2, btc1).right.get
-//  // wait for tx0 and tx1, X
-//  val (carol6, ctb2) = Carol.step6(carolPk, carol5, bobX).right.get
-//  Bob.step7(alicePk, bob3, ctb2).right.get
-//  val atc2 = Alice.step8(alicePk, alice4).right.get
-//  Carol.step9(carolPk, carol6, atc2).right.get
-//  logger.info("Done")
+  val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.getHashAsString, tx2.getOutput(0).getScriptPubKey, p.bitcoinAmount, serviceBitcoinPrivateKey, bitcoinUser.getPubKey)
+  val tx6 = ServiceSide.recoverWavesSwapTransaction(serviceWavesPublicKey, wavesUser, 400000)
 }
