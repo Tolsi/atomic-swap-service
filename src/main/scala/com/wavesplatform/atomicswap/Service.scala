@@ -9,6 +9,7 @@ import com.wavesplatform.wavesj._
 import org.bitcoinj.core.{Coin, ECKey, Sha256Hash, Utils}
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.script.ScriptBuilder
+import com.wavesplatform.atomicswap.bitcoin.coinswap.util.TransactionsUtil._
 
 object Service extends App {
 
@@ -67,6 +68,8 @@ object Service extends App {
     p.hashX, currentWavesHeight + 30, wavesUserTmpPrivateKey, 100000, p.startTimestamp)
   val tx11 = Transaction.makeScriptTx(wavesUserTmpPrivateKey, Base58.encode(wavesSwapScript), 'T', 100000)
   // TX2 - Bob Bitcoin -> scr2
+  val T2script = createXHashUntilTimelockOrToSelfScript(p.hashX, wavesUserBitcoinPublicKey, p.startTimestamp + 30.minutes.toSeconds, bitcoinUser.getPubKey)
+  val tx2 = sendMoneyToScript(bitcoinUserBitcoinOutInfo, p.bitcoinAmount, T2script)
 
   // TX3 - Service [normal case] - scr1 -> Bob Waves address
   // TX4 - Service [normal case] - scr1 -> Alice Bitcoin address
