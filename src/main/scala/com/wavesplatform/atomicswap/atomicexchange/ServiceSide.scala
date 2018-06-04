@@ -15,7 +15,7 @@ object ServiceSide {
                                       serviceX: Array[Byte],
                                       fee: Long
                                     )(implicit p: ExchangeParams): WavesTransaction = {
-    val tx = wavesj.Transaction.makeTransferTx(serviceWavesPublicKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "")
+    val tx = wavesj.Transaction.makeTransferTx(serviceWavesPublicKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestampMillis + 2)
     tx.setProof(0, Base58.encode(serviceX))
     WavesTransaction(tx)
   }
@@ -41,10 +41,10 @@ object ServiceSide {
       ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.networkParams))))
   }
 
-  def recoverWavesSwapTransaction(serviceWavesPublicKey: PublicKeyAccount,
+  def recoverWavesSwapTransaction(wavesUserTmpPrivateKey: PublicKeyAccount,
                                   wavesUser: PublicKeyAccount,
                                   fee: Long)
                                  (implicit p: ExchangeParams): WavesTransaction = {
-    WavesTransaction(Transaction.makeTransferTx(serviceWavesPublicKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, ""))
+    WavesTransaction(Transaction.makeTransferTx(wavesUserTmpPrivateKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestampMillis + 2))
   }
 }
