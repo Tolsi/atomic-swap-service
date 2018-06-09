@@ -16,8 +16,7 @@ object ServiceSide {
                                       fee: Long
                                     )(implicit p: ExchangeParams): WavesTransaction = {
     val tx = wavesj.Transaction.makeTransferTx(serviceWavesPublicKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestampMillis + 2)
-    tx.setProof(0, Base58.encode(serviceX))
-    WavesTransaction(tx)
+    WavesTransaction(tx.setProof(0, Base58.encode(serviceX)))
   }
 
 

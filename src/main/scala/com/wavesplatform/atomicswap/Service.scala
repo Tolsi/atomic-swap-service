@@ -38,7 +38,7 @@ object Service extends App {
       "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decrease".getBytes), 1, 'T')
   private val wavesUserTmpPrivateKey =
     PrivateKeyAccount.fromSeed(Base58.encode(
-      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decrease1fg".getBytes), 1, 'T')
+      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decreasherh3".getBytes), 1, 'T')
   private val wavesUserTmpPublicKey = new PublicKeyAccount(wavesUserTmpPrivateKey.getPublicKey, 'T')
   // empty mzqD1A9pAJyELfMAWUrqcz5K8WfQEcXTPY
   private val wavesUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
@@ -59,9 +59,9 @@ object Service extends App {
   private val serviceBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "92NJU1S96ZKwhtVGmHkMWZZsyWwZeKmYUwjCvTmkCNMELhA6HQe"))
 
-  private val currentWavesHeight: Int = 372665
-//  private val now = System.currentTimeMillis()
-  private val now = 1527696585240L
+  private val currentWavesHeight: Int = 372475
+  //  private val now = System.currentTimeMillis()
+  private val now = 1528542641380L
 
   println(now)
 
@@ -80,8 +80,10 @@ object Service extends App {
   // TX1 - Alice Waves -> scr1 money to tmp account + TX0-1 fee
   // TX1-1 - scr1 set script to tmp account
 
+  val n = new Node("https://testnode1.wavesnodes.com/")
+
   val tx1 = WavesSide.sendMoneyToTempSwapAccount(wavesUser, wavesUserTmpPrivateKey, 100000)
-  val tx1_1 = WavesSide.setSwapScriptOnTempSwapAccount(wavesUserTmpPrivateKey, wavesUser, bitcoinUserWavesAccount.getAddress, p.currentWavesHeight + 30, 100000)
+  val tx1_1 = WavesSide.setSwapScriptOnTempSwapAccount(n, wavesUserTmpPrivateKey, wavesUser, bitcoinUserWavesAccount.getAddress, p.currentWavesHeight + 30, 100000)
 
   // TX2 - Bob Bitcoin -> scr2
 
@@ -91,13 +93,22 @@ object Service extends App {
   // TX4 - Service [normal case] - scr1 -> Alice Bitcoin address
 
   val tx3 = ServiceSide.accomplishBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, serviceX, serviceBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
-  val tx4 = ServiceSide.accomplishWavesSwapTransaction(serviceWavesPublicKey, wavesUser, serviceX, 400000)
+  val tx4 = ServiceSide.accomplishWavesSwapTransaction(wavesUserTmpPublicKey, bitcoinUserWavesAccount, serviceX, 500000)
 
   // TX5 - Service (or someone) [failed case] - scr1 (TX0-1) -> Alice Waves address
   // TX6 - Service (or someone) [failed case] - scr2 (TX1) -> Bob Bitcoin address
 
   val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, p.bitcoinAmount, serviceBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
-  val tx6 = ServiceSide.recoverWavesSwapTransaction(wavesUserTmpPublicKey, wavesUser, 400000)
+  val tx6 = ServiceSide.recoverWavesSwapTransaction(wavesUserTmpPublicKey, wavesUser, 500000)
 
+  println("bytes")
   Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).map(_.bytesString).foreach(println)
+  println("ids")
+  Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).map(_.id).foreach(println)
+
+  n.send(tx1.underlying)
+  Thread.sleep(61000)
+  n.send(tx1_1.underlying)
+  Thread.sleep(61000)
+  n.send(tx4.underlying)
 }
