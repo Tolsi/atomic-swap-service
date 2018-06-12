@@ -8,7 +8,7 @@ The classical scheme of atomic exchange on the blockchain requires both particip
 
 At the current stage, tools are being designed to fully implement atomic exchange between chains, which requires, for example, access to signature tools on integrable networks and wallets with private keys. This requires new solutions for the user experience.
 
-You can download and run the server demo from the release section, which is the API for creating transactions for atomic exchange. You can send the generated transactions to the target networks (for example using [nodes](https://testnet.wavesexplorer.com/nodes) or [explorers](https://live.blockcypher.com/btc-testnet/)) and check that they work as stated. Now it is still being tested.
+You can download and run the server demo from the release section, which is the API for creating transactions for atomic exchange between Waves and Bitcoin testnets. You can send the generated transactions to the target networks (for example using [nodes](https://testnet.wavesexplorer.com/nodes) or [explorers](https://live.blockcypher.com/btc-testnet/)) and check that they work as stated. Now it is still being tested ().
 
 You can start the demo using
 
@@ -50,15 +50,51 @@ curl -X POST \
 ]
 ```
 
-You will receive 7 transactions.
+`secret` shoul be a 10+ char string, `wavesAmount` and `bitcoinAmount` - amounts in satoshis/waveslets, `wavesUserWavesPrivateKey` and `wavesTmpPrivateKey` - valid waves private keys (base58), `wavesUserBitcoinPrivateKeyWIF` - bitcoin private key in WIF format, `bitcoinUserWavesPublicKey` - valid waves public key, `bitcoinInputInfo` - info about spended bitcoin tx output (`bitcoinAmount` should be equals to the amount of this output), `txId` - tx id (hex), `outputIndex` - output index in the tx (from 0), `bitcoinUserPrivateKeyWIF` - bitcoin private key in WIF format.
 
-TX1 - Alice Waves -> scr1 money to tmp account + TX1-1 fee + TX3 fee
-TX1-1 - scr1 set script to tmp account
+In the responce you will receive 7 transactions.
 
-TX2 - Bob Bitcoin -> scr2 - fee
+```
+TX1 - Alice Waves -> script1 money to tmp account + TX1-1 fee + TX3 fee
+TX1-1 - script1 - set script to tmp account
 
-TX3 - Service (or someone) [normal case] - scr1 -> Bob Waves address - fee
-TX4 - Alice [normal case] - scr1 -> Alice Bitcoin address
+TX2 - Bob Bitcoin -> script2 - fee
 
-TX5 - Service (or someone) [failed case] - scr1 (TX0-1) -> Alice Waves address
-TX6 - Bob [failed case] - scr2 (TX1) -> Bob Bitcoin address
+TX3 - Bob or anyone [normal case] : script1 -> Bob Waves address - fee
+TX4 - Alice [normal case] : script2 -> Alice Bitcoin address
+
+TX5 - Alice or anyone [failed case] : script1 (TX1-1) -> Alice Waves address
+TX6 - Bob [failed case] : script2 (TX1) -> Bob Bitcoin address
+```
+
+In a good case, only transactions 1-4 should be sent, and in a bad case, 1-2 and 5-6. Or not be sent at all. Or if only 1 has been sent, then it should has been canceled using 5 , and if 2 - then 6.
+
+Of course, in the future, private keys will not be sent to the service, only signed data. Transactions will be sent and their status will be tracked by the backend and users will receive information about the status of the exchange. Most likely this will be realized in the form of an exchange with applications for an exchange. But for now it's just a demo. 
+
+# Analysis of atomic swap ideas
+
+## 1. Simple P2P case
+
+Pros:
+- No trusted intermediary
+Minuses:
+- You need a direct data exchange channel. How do they find out about each other? What do they want to change and at what price? Still need a certain match with information who (on ip?) And where, how much wants to change.
+- Both participants need to monitor both blockchains (have their own nodes or trust public ones).
+- In the case of a timeout of the other, one of them can take money away.
+
+![Simple p2p atomic swap](https://lh3.googleusercontent.com/tCEr_NtksYYJG5-OlhAUnkLyyk35AbwFVKiHfCdXXcNwnZ8mEP58cNzniOsevlSysVyJoV5tFb9nRGRLVoCa1woadj_tRxOFvgjg7H_dbzSaScqOgTs_ZvXckbc1-CJniNO1WxRR)
+
+## Atomic swap with centralized backend
+
+Pros:
+
+- Do not need a direct data exchange channel. All information about the exchange they learn the same through this backend and are exchanged only with it.
+- Both participants do not need to monitor both blockchains. They transfer signed transactions to a trusted backend and can leave offline (for some time).
+- In the case of a timeout, neither of them can withdraw money, followed by a trusted backend and will return them earlier.
+- This backend can not take money anywhere, can only fail to complete the exchange or complete it.
+
+Minuses:
+
+- Trusted intermediary can slip their public keys (we can somehow fix it)
+
+![Our atomic exchange](https://lh6.googleusercontent.com/x2Jxqe46SIoMp9OsJlwv-81AqKOMAmm0Zg1z8ONe5k5t28mhn-gvk614k9oaZYQCg3v3zBhuVra4wkGetvXsu6VPfzp9RoBfoX7bxccjwtg4ov7v5wFZEpykbH58rHY1o_WKBxAY)
