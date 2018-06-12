@@ -41,13 +41,13 @@ object Service extends App {
       "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decrease".getBytes), 1, 'T')
   private val wavesUserTmpPrivateKey =
     PrivateKeyAccount.fromSeed(Base58.encode(
-      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decreasherh3".getBytes), 1, 'T')
+      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decreassemls".getBytes), 1, 'T')
   private val wavesUserTmpPublicKey = new PublicKeyAccount(wavesUserTmpPrivateKey.getPublicKey, 'T')
-  // empty mzqD1A9pAJyELfMAWUrqcz5K8WfQEcXTPY
+  // mzqD1A9pAJyELfMAWUrqcz5K8WfQEcXTPY
   private val wavesUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "91jVRNUJWu9ousWk6LdeUFRPcdFDmBiw5jnpYLogE2Ki8AwiZQg"))
 
-  // 4.69917212 mxxk5mdpPUrpAuxA4JC3oEbUeZ6EHUFa6f
+  // mxxk5mdpPUrpAuxA4JC3oEbUeZ6EHUFa6f
   private val bitcoinUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "91h8oWwuCkzxs979qFNXLF9raNxewMYozW2MnT9pPJ8mids26Wi"))
   private val bitcoinUserWavesAccount = PrivateKeyAccount.fromSeed(Base58.encode(
