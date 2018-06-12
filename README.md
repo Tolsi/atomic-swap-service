@@ -77,6 +77,7 @@ Of course, in the future, private keys will not be sent to the service, only sig
 
 Pros:
 - No trusted intermediary
+
 Minuses:
 - You need a direct data exchange channel. How do they find out about each other? What do they want to change and at what price? Still need a certain match with information who (on ip?) And where, how much wants to change.
 - Both participants need to monitor both blockchains (have their own nodes or trust public ones).
