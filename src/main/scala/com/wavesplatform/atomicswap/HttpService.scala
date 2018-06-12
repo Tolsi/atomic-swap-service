@@ -123,7 +123,7 @@ object HttpService extends HttpApp with JsonSupport {
               val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, p.bitcoinAmount.minus(p.bitcoinFee.multiply(2)), bitcoinUserBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
               val tx6 = ServiceSide.recoverWavesSwapTransaction(wavesTmpPublicKey, wavesUser, p.wavesSmartFee)
 
-              Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).view.map(_.bytes).map(Hex.toHexString).toList.toJson
+              Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).view.map(_.stringify).toList.toJson
             }
           }
         }
