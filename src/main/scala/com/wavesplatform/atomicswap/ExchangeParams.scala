@@ -12,5 +12,5 @@ case class ExchangeParams(networkParams: NetworkParameters,
                           bitcoinAmount: Coin,
                           hashX: Array[Byte],
                           startTimestamp: FiniteDuration,
-                          network: Network,
+                          network: Network[BlockchainTransaction[_]],
                           currentWavesHeight: Int)
