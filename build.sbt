@@ -1,8 +1,10 @@
 name := "atomic-swap-service"
 
-version := "0.1"
+version := "0.0.1"
 
 scalaVersion := "2.12.6"
+
+mainClass in assembly := Some("com.wavesplatform.atomicswap.Server")
 
 libraryDependencies += "org.bitcoinj" % "bitcoinj-core" % "0.14.4"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
