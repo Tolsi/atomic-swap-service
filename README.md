@@ -85,7 +85,7 @@ Minuses:
 
 ![Simple p2p atomic swap](https://lh3.googleusercontent.com/tCEr_NtksYYJG5-OlhAUnkLyyk35AbwFVKiHfCdXXcNwnZ8mEP58cNzniOsevlSysVyJoV5tFb9nRGRLVoCa1woadj_tRxOFvgjg7H_dbzSaScqOgTs_ZvXckbc1-CJniNO1WxRR)
 
-## Atomic swap with centralized backend
+## 2. Atomic swap with centralized backend
 
 Pros:
 
