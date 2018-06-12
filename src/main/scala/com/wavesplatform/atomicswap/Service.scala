@@ -18,17 +18,20 @@ object Service extends App {
                                hashX: Array[Byte],
                                wavesAmount: Int,
                                bitcoinAmount: Coin,
-                               now: FiniteDuration,
+                               startTimestamp: FiniteDuration,
                                currentWavesHeight: Int
                              ): ExchangeParams = ExchangeParams(
     TestNet3Params.get(),
     // 0.01 BTC
-    fee = Coin.CENT,
-    timeout = 30 minutes,
+    bitcoinFee = Coin.CENT,
+    minutesTimeout = 30 minutes,
+    wavesBlocksTimeout = 30,
     wavesAmount,
     bitcoinAmount,
+    wavesFee = 100000,
+    wavesSmartFee = 500000,
     hashX,
-    now,
+    startTimestamp,
     ConsoleFakeNetwork,
     currentWavesHeight)
 
@@ -51,22 +54,13 @@ object Service extends App {
     "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author trololo!".getBytes), 1, 'T')
 
   private val serviceX = "I don't like alice".getBytes
-  // 3N3kaihRJ5bwSRJKnePGsHDFxCgVA7zCbEE
-  private val serviceWavesPrivateKey = PrivateKeyAccount.fromSeed(Base58.encode(
-    "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author Gewgwegf3d".getBytes), 1, 'T')
-
-  private val currentWavesHeight: Int = 372475
-  //  private val now = System.currentTimeMillis()
-  private val now = 1528814953L
-
-  println(now)
 
   implicit private val p = buildTestExchangeParams(
     Sha256Hash.hash(serviceX),
     10,
     Coin.parseCoin("1.28"),
-    now.seconds,
-    currentWavesHeight
+    1528814953L.seconds,
+    372475
   )
 
   // todo many outputs support
@@ -78,24 +72,24 @@ object Service extends App {
 
   val n = new Node("https://testnode1.wavesnodes.com/")
 
-  val tx1 = WavesSide.sendMoneyToTempSwapAccount(wavesUser, wavesUserTmpPrivateKey, 100000)
-  val tx1_1 = WavesSide.setSwapScriptOnTempSwapAccount(n, wavesUserTmpPrivateKey, wavesUser, bitcoinUserWavesAccount.getAddress, p.currentWavesHeight + 30, 100000)
+  val tx1 = WavesSide.sendMoneyToTempSwapAccount(wavesUser, wavesUserTmpPrivateKey, p.wavesFee)
+  val tx1_1 = WavesSide.setSwapScriptOnTempSwapAccount(n, wavesUserTmpPrivateKey, wavesUser, bitcoinUserWavesAccount.getAddress, p.currentWavesHeight + 30, p.wavesFee)
 
   // TX2 - Bob Bitcoin -> scr2
 
-  val tx2 = BitcoinSide.createAtomicSwapTransaction(bitcoinUserBitcoinOutInfo, bitcoinUserBitcoinECKey.getPubKey, wavesUserBitcoinECKey.getPubKey, p.startTimestamp.toSeconds + p.timeout.toSeconds)
+  val tx2 = BitcoinSide.createAtomicSwapTransaction(bitcoinUserBitcoinOutInfo, bitcoinUserBitcoinECKey.getPubKey, wavesUserBitcoinECKey.getPubKey, p.startTimestamp.toSeconds + p.minutesTimeout.toSeconds)
 
   // TX3 - Service [normal case] - scr1 -> Bob Waves address
   // TX4 - Service [normal case] - scr1 -> Alice Bitcoin address
 
   val tx3 = ServiceSide.accomplishBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, serviceX, wavesUserBitcoinECKey.getPrivKeyBytes, wavesUserBitcoinECKey.getPubKey)
-  val tx4 = ServiceSide.accomplishWavesSwapTransaction(wavesUserTmpPublicKey, bitcoinUserWavesAccount, serviceX, 500000)
+  val tx4 = ServiceSide.accomplishWavesSwapTransaction(wavesUserTmpPublicKey, bitcoinUserWavesAccount, serviceX, p.wavesSmartFee)
 
   // TX5 - Service (or someone) [failed case] - scr1 (TX0-1) -> Alice Waves address
   // TX6 - Service (or someone) [failed case] - scr2 (TX1) -> Bob Bitcoin address
 
-  val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, p.bitcoinAmount.minus(p.fee.multiply(2)), bitcoinUserBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
-  val tx6 = ServiceSide.recoverWavesSwapTransaction(wavesUserTmpPublicKey, wavesUser, 500000)
+  val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, p.bitcoinAmount.minus(p.bitcoinFee.multiply(2)), bitcoinUserBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
+  val tx6 = ServiceSide.recoverWavesSwapTransaction(wavesUserTmpPublicKey, wavesUser, p.wavesSmartFee)
 
   println("bytes")
   Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).map(_.bytesString).foreach(println)
