@@ -19,7 +19,7 @@ object TransactionsUtil {
   }
 
   def sendMoneyToScript(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
 
@@ -30,7 +30,7 @@ object TransactionsUtil {
   }
 
   def createBackoutTransactionByTimeout(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
 
@@ -45,7 +45,7 @@ object TransactionsUtil {
   }
 
   def createBackoutTransactionBySecret(txInput: BitcoinInputInfo, v: Coin, x: Array[Byte], outputScript: Script)(implicit p: ExchangeParams): Transaction = {
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
 

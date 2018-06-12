@@ -5,7 +5,8 @@ import org.bitcoinj.core.{Coin, NetworkParameters}
 
 import scala.concurrent.duration.FiniteDuration
 
-case class ExchangeParams(networkParams: NetworkParameters,
+case class ExchangeParams(bitcoinNetworkParams: NetworkParameters,
+                          wavesNetwork: Char,
                           bitcoinFee: Coin,
                           minutesTimeout: FiniteDuration,
                           wavesBlocksTimeout: Long,

@@ -28,7 +28,7 @@ object ServiceSide {
                                       )(implicit p: ExchangeParams): BitcoinTransaction = {
     val tx4amount = p.bitcoinAmount.minus(p.bitcoinFee.multiply(2))
     BitcoinTransaction(createBackoutTransactionByX(BitcoinInputInfo(tx2Id, 0, T2script, wavesUserBitcoinPrivateKey), tx4amount, serviceX,
-      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(wavesUserBitcoinPublic).toAddress(p.networkParams))))
+      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(wavesUserBitcoinPublic).toAddress(p.bitcoinNetworkParams))))
   }
 
   def recoverBitcoinSwapTransaction(tx2Id: String,
@@ -37,7 +37,7 @@ object ServiceSide {
                                     serviceBitcoinPrivateKey: Array[Byte],
                                     bitcoinUserPubKey: Array[Byte])(implicit p: ExchangeParams): BitcoinTransaction = {
     BitcoinTransaction(createBackoutTransactionByTimeout(BitcoinInputInfo(tx2Id, 0, T2script, serviceBitcoinPrivateKey), amount,
-      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.networkParams)), p.minutesTimeout.toSeconds))
+      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.bitcoinNetworkParams)), p.minutesTimeout.toSeconds))
   }
 
   def recoverWavesSwapTransaction(wavesUserTmpPrivateKey: PublicKeyAccount,

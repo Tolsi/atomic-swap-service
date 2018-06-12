@@ -8,7 +8,7 @@ object WavesSide {
                                  wavesUserTmpPrivateKey: PublicKeyAccount,
                                  fee: Long
                                )(implicit p: ExchangeParams): WavesTransaction = {
-    WavesTransaction(Transaction.makeTransferTx(wavesUser, wavesUserTmpPrivateKey.getAddress, p.wavesAmount + 100000 + 500000, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis))
+    WavesTransaction(Transaction.makeTransferTx(wavesUser, wavesUserTmpPrivateKey.getAddress, p.wavesAmount + p.wavesFee + p.wavesSmartFee, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis))
   }
 
   def setSwapScriptOnTempSwapAccount(node: Node,

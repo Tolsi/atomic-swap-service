@@ -13,36 +13,32 @@ import org.bitcoinj.script.ScriptBuilder
 import scala.concurrent.duration._
 
 object Playground extends App {
+  private val serviceX = "I don't like alice".getBytes
 
-  def buildTestExchangeParams(
-                               hashX: Array[Byte],
-                               wavesAmount: Int,
-                               bitcoinAmount: Coin,
-                               startTimestamp: FiniteDuration,
-                               currentWavesHeight: Int
-                             ): ExchangeParams = ExchangeParams(
+  implicit private val p: ExchangeParams = ExchangeParams(
     TestNet3Params.get(),
+    'T',
     // 0.01 BTC
     bitcoinFee = Coin.CENT,
     minutesTimeout = 30 minutes,
     wavesBlocksTimeout = 30,
-    wavesAmount,
-    bitcoinAmount,
+    10,
+    Coin.parseCoin("1.28"),
     wavesFee = 100000,
     wavesSmartFee = 500000,
-    hashX,
-    startTimestamp,
+    Sha256Hash.hash(serviceX),
+    1528814953L.seconds,
     ConsoleFakeNetwork,
-    currentWavesHeight)
+    372475)
 
   // 3N2Bk9EtqW5PGuc38pYaEUKzqsMjEydwXFi
   private val wavesUser =
     PrivateKeyAccount.fromSeed(Base58.encode(
-      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decrease".getBytes), 1, 'T')
+      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decrease".getBytes), 1, p.wavesNetwork)
   private val wavesUserTmpPrivateKey =
     PrivateKeyAccount.fromSeed(Base58.encode(
-      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decreassemls".getBytes), 1, 'T')
-  private val wavesUserTmpPublicKey = new PublicKeyAccount(wavesUserTmpPrivateKey.getPublicKey, 'T')
+      "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author decreassrr34gg4".getBytes), 1, p.wavesNetwork)
+  private val wavesUserTmpPublicKey = new PublicKeyAccount(wavesUserTmpPrivateKey.getPublicKey, p.wavesNetwork)
   // mzqD1A9pAJyELfMAWUrqcz5K8WfQEcXTPY
   private val wavesUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "91jVRNUJWu9ousWk6LdeUFRPcdFDmBiw5jnpYLogE2Ki8AwiZQg"))
@@ -51,21 +47,11 @@ object Playground extends App {
   private val bitcoinUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "91h8oWwuCkzxs979qFNXLF9raNxewMYozW2MnT9pPJ8mids26Wi"))
   private val bitcoinUserWavesAccount = PrivateKeyAccount.fromSeed(Base58.encode(
-    "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author trololo!".getBytes), 1, 'T')
-
-  private val serviceX = "I don't like alice".getBytes
-
-  implicit private val p = buildTestExchangeParams(
-    Sha256Hash.hash(serviceX),
-    10,
-    Coin.parseCoin("1.28"),
-    1528814953L.seconds,
-    372475
-  )
+    "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author trololo!".getBytes), 1, p.wavesNetwork)
 
   // todo many outputs support
   private val bitcoinUserBitcoinOutInfo = BitcoinInputInfo("04891274037778941a771bcaad74569a8f5ca53b447acbbd711f5c7b25d70a1c", 0,
-    ScriptBuilder.createOutputScript(bitcoinUserBitcoinECKey.toAddress(p.networkParams)), bitcoinUserBitcoinECKey.getPrivKeyBytes)
+    ScriptBuilder.createOutputScript(bitcoinUserBitcoinECKey.toAddress(p.bitcoinNetworkParams)), bitcoinUserBitcoinECKey.getPrivKeyBytes)
 
   // TX1 - Alice Waves -> scr1 money to tmp account + TX0-1 fee
   // TX1-1 - scr1 set script to tmp account

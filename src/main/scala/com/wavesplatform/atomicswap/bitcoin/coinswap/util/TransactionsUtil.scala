@@ -21,7 +21,7 @@ object TransactionsUtil {
 
   def sendMoneyFromMultisig(txInputs: Seq[BitcoinInputInfo], v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
     require(txInputs.forall(t => t.outputIndex == txInputs.head.outputIndex && t.script == txInputs.head.script && t.txId == txInputs.head.txId))
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
     val headInput = txInputs.head
@@ -35,7 +35,7 @@ object TransactionsUtil {
   }
 
   def sendMoneyToScript(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
 
@@ -46,7 +46,7 @@ object TransactionsUtil {
   }
 
   def createBackoutTransactionByTimeout(txInput: BitcoinInputInfo, v: Coin, outputScript: Script, timeoutTime: Long)(implicit p: ExchangeParams): Transaction = {
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.setLockTime(timeoutTime + 1)
     tx.addOutput(v, outputScript)
@@ -62,7 +62,7 @@ object TransactionsUtil {
   }
 
   def createBackoutTransactionByX(txInput: BitcoinInputInfo, v: Coin, x: Array[Byte], outputScript: Script)(implicit p: ExchangeParams): Transaction = {
-    val tx = new Transaction(p.networkParams)
+    val tx = new Transaction(p.bitcoinNetworkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
     tx.addOutput(v, outputScript)
 
