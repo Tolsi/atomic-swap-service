@@ -67,7 +67,7 @@ TX5 - Alice or anyone [failed case] : script1 (TX1-1) -> Alice Waves address
 TX6 - Bob [failed case] : script2 (TX1) -> Bob Bitcoin address
 ```
 
-In a good case, only transactions 1-4 should be sent, and in a bad case, 1-2 and 5-6. Or not be sent at all. Or if only 1 has been sent, then it should has been canceled using 5 , and if 2 - then 6.
+In a good case, only transactions 1-4 should be sent, and in a bad case, 1-[2](http://bitcoin-script-debugger.visvirial.com/?input=OP_PUSHDATA1%2072%200x3045022100e8b2061c88d3aaad96e747e44c1a9e253f5dacda72f2d17bfd68325e532dd81d02203839b2d28a507889188bdef5b9cffbd408bfd6daaa4ea276a3a4cdd9de4b78f001%20OP_PUSHDATA1%2018%200x4920646f6e2774206c696b6520616c696365%20OP_DEPTH%20OP_2%20OP_EQUAL%20OP_IF%20OP_SHA256%2032%200x7801a4edf71fcb95ec0fa1e0e156c36c0c892f12255d906f52a9a7f392253b8f%20OP_EQUALVERIFY%2033%200x03c6d6f3806339ddae524f467bca4cbe401bc8ca16449ab4ba4f66a46454cc8124%20OP_CHECKSIG%20OP_ELSE%204%200x5b1fe471%20OP_NOP2%20OP_DROP%2033%200x02a3ea55e461f15bc98aad469ae8d70224072e131435133ba8a5604d3d0a6a3b5e%20OP_CHECKSIG%20OP_ENDIF) and 5-6. Or not be sent at all. Or if only 1 has been sent, then it should has been canceled using 5 , and if 2 - then 6.
 
 Of course, in the future, private keys will not be sent to the service, only signed data. Transactions will be sent and their status will be tracked by the backend and users will receive information about the status of the exchange. Most likely this will be realized in the form of an exchange with applications for an exchange. But for now it's just a demo. 
 
