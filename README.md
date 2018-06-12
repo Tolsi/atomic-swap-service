@@ -8,7 +8,7 @@ The classical scheme of atomic exchange on the blockchain requires both particip
 
 At the current stage, tools are being designed to fully implement atomic exchange between chains, which requires, for example, access to signature tools on integrable networks and wallets with private keys. This requires new solutions for the user experience.
 
-You can download and run the server demo from the release section, which is the API for creating transactions for atomic exchange between Waves and Bitcoin testnets. You can send the generated transactions to the target networks (for example using [nodes](https://testnet.wavesexplorer.com/nodes) or [explorers](https://live.blockcypher.com/btc-testnet/)) and check that they work as stated. Now it is still being tested ().
+You can download and run the server demo from the release section, which is the API for creating transactions for atomic exchange between Waves and Bitcoin testnets. You can send the generated transactions to the target networks (for example using [nodes](https://testnet.wavesexplorer.com/nodes) or [explorers](https://live.blockcypher.com/btc-testnet/)) and check that they work as stated. Now it is still being tested (especially TX6, bitcoin handles it strange).
 
 You can start the demo using
 
