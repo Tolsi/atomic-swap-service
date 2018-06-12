@@ -18,13 +18,13 @@ object Service extends App {
                                hashX: Array[Byte],
                                wavesAmount: Int,
                                bitcoinAmount: Coin,
-                               now: Long,
+                               now: FiniteDuration,
                                currentWavesHeight: Int
                              ): ExchangeParams = ExchangeParams(
     TestNet3Params.get(),
     // 0.01 BTC
     fee = Coin.CENT,
-    timeout = 1 minute,
+    timeout = 30 minutes,
     wavesAmount,
     bitcoinAmount,
     hashX,
@@ -44,7 +44,7 @@ object Service extends App {
   private val wavesUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "91jVRNUJWu9ousWk6LdeUFRPcdFDmBiw5jnpYLogE2Ki8AwiZQg"))
 
-  // 4.69917212 n2DJhSo1AnGU95gdt6GVGLcnPhBmLnMz9U
+  // 4.69917212 mxxk5mdpPUrpAuxA4JC3oEbUeZ6EHUFa6f
   private val bitcoinUserBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
     "91h8oWwuCkzxs979qFNXLF9raNxewMYozW2MnT9pPJ8mids26Wi"))
   private val bitcoinUserWavesAccount = PrivateKeyAccount.fromSeed(Base58.encode(
@@ -54,27 +54,23 @@ object Service extends App {
   // 3N3kaihRJ5bwSRJKnePGsHDFxCgVA7zCbEE
   private val serviceWavesPrivateKey = PrivateKeyAccount.fromSeed(Base58.encode(
     "sad capable gospel wage bean evoke hundred crawl logic question cheese outer leader author Gewgwegf3d".getBytes), 1, 'T')
-  private val serviceWavesPublicKey = new PublicKeyAccount(serviceWavesPrivateKey.getPublicKey, 'T')
-  //  3.09898185  n2FMUoJQ6BWRJeWqjAPk8LdsC98Bkt26JQ
-  private val serviceBitcoinECKey = ECKey.fromPrivate(KeysUtil.privateKeyBytesFromWIF(
-    "92NJU1S96ZKwhtVGmHkMWZZsyWwZeKmYUwjCvTmkCNMELhA6HQe"))
 
   private val currentWavesHeight: Int = 372475
   //  private val now = System.currentTimeMillis()
-  private val now = 1528542641380L
+  private val now = 1528814953L
 
   println(now)
 
   implicit private val p = buildTestExchangeParams(
     Sha256Hash.hash(serviceX),
     10,
-    Coin.parseCoin("1.3"),
-    now,
+    Coin.parseCoin("1.28"),
+    now.seconds,
     currentWavesHeight
   )
 
   // todo many outputs support
-  private val bitcoinUserBitcoinOutInfo = BitcoinInputInfo("6d932c2d07ed8e752656d95e6391e827188ba6dda1883a253c4df45aedef2886", 0,
+  private val bitcoinUserBitcoinOutInfo = BitcoinInputInfo("04891274037778941a771bcaad74569a8f5ca53b447acbbd711f5c7b25d70a1c", 0,
     ScriptBuilder.createOutputScript(bitcoinUserBitcoinECKey.toAddress(p.networkParams)), bitcoinUserBitcoinECKey.getPrivKeyBytes)
 
   // TX1 - Alice Waves -> scr1 money to tmp account + TX0-1 fee
@@ -87,28 +83,22 @@ object Service extends App {
 
   // TX2 - Bob Bitcoin -> scr2
 
-  val tx2 = BitcoinSide.createAtomicSwapTransaction(bitcoinUserBitcoinOutInfo, bitcoinUserBitcoinECKey.getPubKey, wavesUserBitcoinECKey.getPubKey, p.startTimestampMillis / 1000 + 30.minutes.toSeconds)
+  val tx2 = BitcoinSide.createAtomicSwapTransaction(bitcoinUserBitcoinOutInfo, bitcoinUserBitcoinECKey.getPubKey, wavesUserBitcoinECKey.getPubKey, p.startTimestamp.toSeconds + p.timeout.toSeconds)
 
   // TX3 - Service [normal case] - scr1 -> Bob Waves address
   // TX4 - Service [normal case] - scr1 -> Alice Bitcoin address
 
-  val tx3 = ServiceSide.accomplishBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, serviceX, serviceBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
+  val tx3 = ServiceSide.accomplishBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, serviceX, wavesUserBitcoinECKey.getPrivKeyBytes, wavesUserBitcoinECKey.getPubKey)
   val tx4 = ServiceSide.accomplishWavesSwapTransaction(wavesUserTmpPublicKey, bitcoinUserWavesAccount, serviceX, 500000)
 
   // TX5 - Service (or someone) [failed case] - scr1 (TX0-1) -> Alice Waves address
   // TX6 - Service (or someone) [failed case] - scr2 (TX1) -> Bob Bitcoin address
 
-  val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, p.bitcoinAmount, serviceBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
+  val tx5 = ServiceSide.recoverBitcoinSwapTransaction(tx2.id, tx2.underlying.getOutput(0).getScriptPubKey, p.bitcoinAmount.minus(p.fee.multiply(2)), bitcoinUserBitcoinECKey.getPrivKeyBytes, bitcoinUserBitcoinECKey.getPubKey)
   val tx6 = ServiceSide.recoverWavesSwapTransaction(wavesUserTmpPublicKey, wavesUser, 500000)
 
   println("bytes")
   Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).map(_.bytesString).foreach(println)
   println("ids")
   Seq(tx1, tx1_1, tx2, tx3, tx4, tx5, tx6).map(_.id).foreach(println)
-
-  n.send(tx1.underlying)
-  Thread.sleep(61000)
-  n.send(tx1_1.underlying)
-  Thread.sleep(61000)
-  n.send(tx4.underlying)
 }

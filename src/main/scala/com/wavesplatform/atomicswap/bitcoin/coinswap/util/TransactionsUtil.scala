@@ -8,11 +8,12 @@ import org.bitcoinj.script.{Script, ScriptBuilder}
 import org.bitcoinj.script.ScriptOpCodes._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 
 object TransactionsUtil {
   def createXHashUntilTimelockOrToSelfScript(digest: Array[Byte], oppositePublicKey: Array[Byte], timeout: Long, myPublicKey: Array[Byte]): Script = {
     new ScriptBuilder().op(OP_DEPTH).op(OP_2).op(OP_EQUAL).op(OP_IF)
-      .op(OP_HASH256).data(digest).op(OP_EQUALVERIFY).data(oppositePublicKey).op(OP_CHECKSIG)
+      .op(OP_SHA256).data(digest).op(OP_EQUALVERIFY).data(oppositePublicKey).op(OP_CHECKSIG)
       .op(OP_ELSE).number(timeout).op(OP_CHECKLOCKTIMEVERIFY).op(OP_DROP).data(myPublicKey).op(OP_CHECKSIG)
       .op(OP_ENDIF)
       .build
@@ -44,9 +45,10 @@ object TransactionsUtil {
     tx
   }
 
-  def createBackoutTransactionByTimeout(txInput: BitcoinInputInfo, v: Coin, outputScript: Script)(implicit p: ExchangeParams): Transaction = {
+  def createBackoutTransactionByTimeout(txInput: BitcoinInputInfo, v: Coin, outputScript: Script, timeoutTime: Long)(implicit p: ExchangeParams): Transaction = {
     val tx = new Transaction(p.networkParams)
     tx.setPurpose(Transaction.Purpose.USER_PAYMENT)
+    tx.setLockTime(timeoutTime + 1)
     tx.addOutput(v, outputScript)
 
     val input = tx.addInput(Sha256Hash.wrap(txInput.txId), txInput.outputIndex, txInput.script)

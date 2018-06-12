@@ -15,7 +15,7 @@ object ServiceSide {
                                       serviceX: Array[Byte],
                                       fee: Long
                                     )(implicit p: ExchangeParams): WavesTransaction = {
-    val tx = wavesj.Transaction.makeTransferTx(serviceWavesPublicKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestampMillis + 2)
+    val tx = wavesj.Transaction.makeTransferTx(serviceWavesPublicKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis + 2)
     WavesTransaction(tx.setProof(0, Base58.encode(serviceX)))
   }
 
@@ -23,12 +23,12 @@ object ServiceSide {
   def accomplishBitcoinSwapTransaction(tx2Id: String,
                                        T2script: Script,
                                        serviceX: Array[Byte],
-                                       serviceBitcoinPrivateKey: Array[Byte],
-                                       bitcoinUserPubKey: Array[Byte]
+                                       wavesUserBitcoinPrivateKey: Array[Byte],
+                                       wavesUserBitcoinPublic: Array[Byte]
                                       )(implicit p: ExchangeParams): BitcoinTransaction = {
-    val tx4amount = p.bitcoinAmount.minus(p.fee.multiply(1))
-    BitcoinTransaction(createBackoutTransactionByX(BitcoinInputInfo(tx2Id, 0, T2script, serviceBitcoinPrivateKey), tx4amount, serviceX,
-      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.networkParams))))
+    val tx4amount = p.bitcoinAmount.minus(p.fee.multiply(2))
+    BitcoinTransaction(createBackoutTransactionByX(BitcoinInputInfo(tx2Id, 0, T2script, wavesUserBitcoinPrivateKey), tx4amount, serviceX,
+      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(wavesUserBitcoinPublic).toAddress(p.networkParams))))
   }
 
   def recoverBitcoinSwapTransaction(tx2Id: String,
@@ -37,13 +37,13 @@ object ServiceSide {
                                     serviceBitcoinPrivateKey: Array[Byte],
                                     bitcoinUserPubKey: Array[Byte])(implicit p: ExchangeParams): BitcoinTransaction = {
     BitcoinTransaction(createBackoutTransactionByTimeout(BitcoinInputInfo(tx2Id, 0, T2script, serviceBitcoinPrivateKey), amount,
-      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.networkParams))))
+      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.networkParams)), p.timeout.toSeconds))
   }
 
   def recoverWavesSwapTransaction(wavesUserTmpPrivateKey: PublicKeyAccount,
                                   wavesUser: PublicKeyAccount,
                                   fee: Long)
                                  (implicit p: ExchangeParams): WavesTransaction = {
-    WavesTransaction(Transaction.makeTransferTx(wavesUserTmpPrivateKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestampMillis + 2))
+    WavesTransaction(Transaction.makeTransferTx(wavesUserTmpPrivateKey, wavesUser.getAddress, p.wavesAmount, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis + 2))
   }
 }

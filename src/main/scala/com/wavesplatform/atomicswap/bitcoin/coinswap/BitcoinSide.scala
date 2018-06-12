@@ -11,6 +11,6 @@ object BitcoinSide extends StrictLogging {
                                   wavesUserBitcoinPublicKey: Array[Byte],
                                   timeoutTs: Long)(implicit p: ExchangeParams): BitcoinTransaction = {
     val T2script = createXHashUntilTimelockOrToSelfScript(p.hashX, wavesUserBitcoinPublicKey, timeoutTs, bitcoinUserPubKey)
-    BitcoinTransaction(sendMoneyToScript(bitcoinUserBitcoinOutInfo, p.bitcoinAmount, T2script))
+    BitcoinTransaction(sendMoneyToScript(bitcoinUserBitcoinOutInfo, p.bitcoinAmount.minus(p.fee), T2script))
   }
 }
