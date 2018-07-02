@@ -32,7 +32,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
     override def write(obj: BitcoinInputInfo): JsValue = ???
   }
-  implicit val startExchangeDemoRequestFormat = jsonFormat8(StartExchangeDemoRequest.apply)
+  implicit val startExchangeDemoRequestFormat = jsonFormat9(StartExchangeDemoRequest.apply)
 }
 
 
@@ -44,7 +44,8 @@ case class StartExchangeDemoRequest(
                                      wavesTmpPrivateKey: String,
                                      wavesUserBitcoinPrivateKeyWIF: String,
                                      bitcoinUserWavesPublicKey: String,
-                                     bitcoinInputInfo: BitcoinInputInfo)
+                                     bitcoinInputInfo: BitcoinInputInfo,
+                                     startTimestampMillis: Long)
 
 object HttpService extends HttpApp with JsonSupport {
 
@@ -89,7 +90,7 @@ object HttpService extends HttpApp with JsonSupport {
                 Sha256Hash.hash(serviceX),
                 10,
                 Coin.valueOf(request.bitcoinAmount),
-                System.currentTimeMillis().millis,
+                request.startTimestampMillis.millis,
                 // sync
                 wavesNode.getHeight
               )
