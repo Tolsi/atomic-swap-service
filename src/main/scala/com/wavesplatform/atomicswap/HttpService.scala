@@ -95,12 +95,12 @@ object HttpService extends HttpApp with JsonSupport {
                 wavesNode.getHeight
               )
 
-              val wavesUser = PrivateKeyAccount.fromPrivateKey(request.wavesUserWavesPrivateKey, p.wavesNetwork)
-              val wavesTmpUser = PrivateKeyAccount.fromPrivateKey(request.wavesTmpPrivateKey, p.wavesNetwork)
-              val wavesTmpPublicKey = new PublicKeyAccount(wavesTmpUser.getPublicKey, p.wavesNetwork)
+              val wavesUser = PrivateKeyAccount.fromPrivateKey(request.wavesUserWavesPrivateKey, p.wavesNetwork.toByte)
+              val wavesTmpUser = PrivateKeyAccount.fromPrivateKey(request.wavesTmpPrivateKey, p.wavesNetwork.toByte)
+              val wavesTmpPublicKey = new PublicKeyAccount(wavesTmpUser.getPublicKey, p.wavesNetwork.toByte)
 
               val bitcoinUserBitcoinECKey = ECKey.fromPrivate(request.bitcoinInputInfo.pk)
-              val bitcoinUserWavesAccount = new PublicKeyAccount(request.bitcoinUserWavesPublicKey, p.wavesNetwork)
+              val bitcoinUserWavesAccount = new PublicKeyAccount(request.bitcoinUserWavesPublicKey, p.wavesNetwork.toByte)
 
 
               val tx1 = WavesSide.sendMoneyToTempSwapAccount(wavesUser, wavesTmpUser, p.wavesFee)
