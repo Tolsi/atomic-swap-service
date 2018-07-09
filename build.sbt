@@ -16,8 +16,6 @@ libraryDependencies += "com.typesafe.akka" %% "akka-stream" % "2.5.12"
 libraryDependencies += "com.typesafe.akka" %% "akka-http" % "10.1.2"
 libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.2"
 libraryDependencies += "com.typesafe.akka" %% "akka-http-testkit" % "10.1.2" % Test
-
-lazy val root = (project in file(".")).dependsOn(scalaBitcoinJsonrpc)
-lazy val scalaBitcoinJsonrpc = RootProject(uri("git://github.com/philwantsfish/scala-bitcoin-jsonrpc.git"))
+libraryDependencies += "wf.bitcoin" % "JavaBitcoindRpcClient" % "0.9.13"
 
 resolvers += Resolver.mavenLocal
