@@ -33,7 +33,7 @@ trait WithAwaitTransaction[T <: BlockchainTransaction[_]] {
   def waitForConfirmations(txId: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Unit] = {
     Source.tick(0.seconds, 1 minute, ()).mapAsync(1)(_ => getTransaction(txId))
       .filter(tx => {
-        tx.exists(_.confirmation.exists(_ >= confirmations))
+        tx.exists(_.confirmationsCount.exists(_ >= confirmations))
       }).completionTimeout(timeout.duration).runWith(Sink.head).map(_ => ())
   }
 }
@@ -41,17 +41,19 @@ trait WithAwaitTransaction[T <: BlockchainTransaction[_]] {
 object ConsoleFakeNetwork extends Api[BlockchainTransaction[_], BlockchainTransaction[_], BlockchainBlock[BlockchainTransaction[_]]] with StrictLogging {
   override def sendTx(t: BlockchainTransaction[_], name: String): Future[Unit] = Future.successful {
     t match {
-      case wt@WavesTransaction(_, _) =>
+      case wt@WavesTransferTransaction(_, _) =>
         logger.info(s"Waves transaction $name tx id [${wt.id}]:")
         logger.info(Base58.encode(wt.bytes))
-      case bt@BitcoinTransaction(_, _) =>
+      case bt@BitcoinTransferTransaction(_, _) =>
         logger.info(s"Bitcoin transaction $name tx id [${bt.id}]:")
         logger.info(Hex.toHexString(bt.bytes))
+      case _ =>
     }
   }
   override def getBlock(height: Int): Future[Option[BlockchainBlock[BlockchainTransaction[_]]]] = ???
-  override def getTransaction(txId: String): Future[Option[BlockchainTransaction[_]]] = ???
+
   override def height: Future[Long] = ???
   override val confirmations: Int = ???
   override val tryEvery: FiniteDuration = ???
+  override def getTransaction(txId: String): Future[Option[BlockchainTransaction[_]]] = ???
 }

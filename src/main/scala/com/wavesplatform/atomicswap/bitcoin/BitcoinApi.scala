@@ -1,43 +1,18 @@
 package com.wavesplatform.atomicswap.bitcoin
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.wavesplatform.atomicswap._
-import com.wavesplatform.atomicswap.bitcoin.BitcoinApi.{BitcoinRpcBlock, BitcoinRpcTransaction}
-import spray.json._
-import wf.bitcoin.javabitcoindrpcclient.{BitcoinJSONRPCClient, BitcoinRPCException, BitcoindRpcClient}
+import wf.bitcoin.javabitcoindrpcclient.{BitcoinJSONRPCClient, BitcoinRPCException}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
-object BitcoinApi extends SprayJsonSupport with DefaultJsonProtocol {
 
-  case class BitcoinRpcTransaction(id: String, underlying: BitcoindRpcClient.RawTransaction) extends BlockchainTransaction[BitcoindRpcClient.RawTransaction] {
-    override val bytes: Array[Byte] = Array.emptyByteArray
-
-    override def bytesString: String = ""
-
-    override def stringify: String = toString
-
-    override val confirmation: Option[Int] = Try(underlying.confirmations()).toOption
-  }
-
-  case class BitcoinRpcBlock(hash: String, tx: Seq[BitcoinRpcTransaction], height: Int = -1) extends BlockchainBlock[BitcoinRpcTransaction] {
-    override val transactions: Seq[BitcoinRpcTransaction] = tx
-
-    override def stringify: String = toString
-  }
-
-}
-
-class BitcoinApi(rpc: String, val confirmations: Int = 3, val tryEvery: FiniteDuration = 1 minute)(implicit ec: ExecutionContext) extends Api[BitcoinTransaction, BitcoinRpcTransaction, BitcoinRpcBlock] {
-
-  import BitcoinApi._
+class BitcoinApi(rpc: String, val confirmations: Int = 3, val tryEvery: FiniteDuration = 1 minute)(implicit ec: ExecutionContext) extends Api[BitcoinTransferTransaction, BitcoinRpcTransaction, BitcoinRpcBlock] {
 
   private val client = new BitcoinJSONRPCClient(rpc)
 
-  override def sendTx(tx: BitcoinTransaction, name: String): Future[Unit] = Future {
+  override def sendTx(tx: BitcoinTransferTransaction, name: String): Future[Unit] = Future {
     client.sendRawTransaction(tx.bytesString)
   }
 

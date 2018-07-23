@@ -1,14 +1,14 @@
 package com.wavesplatform.atomicswap.waves
 
-import com.wavesplatform.atomicswap.{ExchangeParams, WavesTransaction}
+import com.wavesplatform.atomicswap.{ExchangeParams, WavesTransferTransaction}
 import com.wavesplatform.wavesj._
 
 object WavesSide {
   def sendMoneyToTempSwapAccount(wavesUser: PrivateKeyAccount,
                                  wavesUserTmpPrivateKey: PublicKeyAccount,
                                  fee: Long
-                               )(implicit p: ExchangeParams): WavesTransaction = {
-    WavesTransaction(Transaction.makeTransferTx(wavesUser, wavesUserTmpPrivateKey.getAddress, p.wavesAmount + p.wavesFee + p.wavesSmartFee, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis))
+                               )(implicit p: ExchangeParams): WavesTransferTransaction = {
+    WavesTransferTransaction(Transaction.makeTransferTx(wavesUser, wavesUserTmpPrivateKey.getAddress, p.wavesAmount + p.wavesFee + p.wavesSmartFee, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis))
   }
 
   def setSwapScriptOnTempSwapAccount(node: Node,
@@ -17,10 +17,10 @@ object WavesSide {
                                      bitcoinUserWavesAddress: String,
                                      timeoutHeight: Int,
                                      fee: Long
-                                    )(implicit p: ExchangeParams): WavesTransaction = {
+                                    )(implicit p: ExchangeParams): WavesTransferTransaction = {
     val wavesSwapScript = AtomicSwapScriptSetScriptTransactionBuilder.build(bitcoinUserWavesAddress, wavesUser.getAddress, wavesUser,
       p.hashX, timeoutHeight)
     val wavesSwapScriptCompiled = AtomicSwapScriptSetScriptTransactionBuilder.compile(node, wavesSwapScript)
-    WavesTransaction(Transaction.makeScriptTx(wavesUserTmpPrivateKey, Base64.encode(wavesSwapScriptCompiled), 'T', fee, p.startTimestamp.toMillis + 1))
+    WavesTransferTransaction(Transaction.makeScriptTx(wavesUserTmpPrivateKey, Base64.encode(wavesSwapScriptCompiled), 'T', fee, p.startTimestamp.toMillis + 1))
   }
 }
