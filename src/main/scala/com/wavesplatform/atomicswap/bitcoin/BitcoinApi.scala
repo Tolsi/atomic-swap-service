@@ -12,7 +12,7 @@ class BitcoinApi(rpc: String, val confirmations: Int = 3, val tryEvery: FiniteDu
 
   private val client = new BitcoinJSONRPCClient(rpc)
 
-  override def sendTx(tx: BitcoinTransferTransaction, name: String): Future[Unit] = Future {
+  override def sendTx(tx: BitcoinTransferTransaction): Future[Unit] = Future {
     client.sendRawTransaction(tx.bytesString)
   }
 

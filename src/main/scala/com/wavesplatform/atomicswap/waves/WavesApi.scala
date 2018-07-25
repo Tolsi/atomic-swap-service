@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class WavesApi(node: String, val confirmations: Int = 10, val tryEvery: FiniteDuration = 1 minute) extends Api[WavesTransferTransaction, WavesRpcTransferTransaction, WavesBlock] {
   private val n = new Node(node)
 
-  override def sendTx(tx: WavesTransferTransaction, name: String): Future[Unit] = Future {
+  override def sendTx(tx: WavesTransferTransaction): Future[Unit] = Future {
     n.send(tx.underlying)
   }
 

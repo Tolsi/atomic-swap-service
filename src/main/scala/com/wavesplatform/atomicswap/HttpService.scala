@@ -4,17 +4,19 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.server.{HttpApp, Route}
 import com.google.common.base.Charsets
 import com.wavesplatform.atomicswap.atomicexchange.ServiceSide
-import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
+import com.wavesplatform.atomicswap.bitcoin.{BitcoinApi, BitcoinInputInfo}
 import com.wavesplatform.atomicswap.bitcoin.coinswap.BitcoinSide
 import com.wavesplatform.atomicswap.bitcoin.util.KeysUtil
-import com.wavesplatform.atomicswap.waves.WavesSide
+import com.wavesplatform.atomicswap.waves.{WavesApi, WavesSide}
 import com.wavesplatform.wavesj.{Node, PrivateKeyAccount, PublicKeyAccount}
 import org.bitcoinj.core.{Coin, ECKey, NetworkParameters, Sha256Hash}
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.script.ScriptBuilder
 import org.bouncycastle.util.encoders.Hex
 import spray.json._
+import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.Future
 import scala.concurrent.duration.{FiniteDuration, _}
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
@@ -47,7 +49,7 @@ case class StartExchangeDemoRequest(
                                      bitcoinInputInfo: BitcoinInputInfo,
                                      startTimestampMillis: Long)
 
-object HttpService extends HttpApp with JsonSupport {
+class HttpService(wavesApi: WavesApi, bitcoinApi: BitcoinApi) extends HttpApp with JsonSupport {
 
   override val bitcoinNetworkParameters: NetworkParameters = TestNet3Params.get()
   val wavesNetwork = 'T'
@@ -75,6 +77,30 @@ object HttpService extends HttpApp with JsonSupport {
     currentWavesHeight)
 
   val wavesNode = new Node("https://testnode1.wavesnodes.com/")
+
+  def processTransactions(
+                           tx1: WavesTransferTransaction,
+                           tx1_1: WavesTransferTransaction,
+                           tx2: BitcoinTransferTransaction,
+                           tx3: BitcoinTransferTransaction,
+                           tx4: WavesTransferTransaction,
+                           tx5: BitcoinTransferTransaction,
+                           tx6: WavesTransferTransaction
+                         )(implicit timeout: akka.util.Timeout): Future[Either[String, String]] = {
+
+    def initStep1F = Future.sequence(Seq(wavesApi.sendAndWaitForConfirmations(tx1), bitcoinApi.sendAndWaitForConfirmations(tx2)))
+
+    def initStep2F = wavesApi.sendAndWaitForConfirmations(tx1_1)
+
+    def successF = Future.sequence(Seq(wavesApi.sendAndWaitForConfirmations(tx4), bitcoinApi.sendAndWaitForConfirmations(tx3)))
+
+    def failureF = Future.sequence(Seq(wavesApi.sendAndWaitForConfirmations(tx6), bitcoinApi.sendAndWaitForConfirmations(tx5)))
+
+    initStep1F.flatMap(_ => initStep2F).flatMap(_ => successF.map(_ => Right("Successful!")))
+      .recoverWith { case _ =>
+        // todo fallback only applied txs
+        failureF.map(_ => Left("Fallback successful!")).fallbackTo(Future.successful(Left("Recover completed"))) }
+  }
 
   override protected def routes: Route = {
     pathPrefix("exchange") {

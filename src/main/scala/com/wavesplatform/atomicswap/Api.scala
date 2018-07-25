@@ -15,18 +15,18 @@ object Api {
   private implicit val _system: ActorSystem = ActorSystem("api")
   private implicit val _materializer: ActorMaterializer = ActorMaterializer()
 }
-trait Api[SendTx <: BlockchainTransaction[_], ReadTx <: BlockchainTransaction[_], Block <: BlockchainBlock[ReadTx]] extends WithAwaitTransaction[ReadTx] {
+trait Api[SendTx <: BlockchainTransaction[_], ReadTx <: BlockchainTransaction[_], Block <: BlockchainBlock[ReadTx]] extends WithAwaitTransaction[SendTx, ReadTx] {
   import Api._
   implicit protected val system: ActorSystem = _system
   implicit protected val materializer: ActorMaterializer = _materializer
-  def sendTx(tx: SendTx, name: String): Future[Unit]
+  def sendTx(tx: SendTx): Future[Unit]
   def getBlock(height: Int): Future[Option[Block]]
   def getTransaction(txId: String): Future[Option[ReadTx]]
   def height: Future[Long]
 }
 
-trait WithAwaitTransaction[T <: BlockchainTransaction[_]] {
-  self: Api[_, T, _] =>
+trait WithAwaitTransaction[S <: BlockchainTransaction[_], T <: BlockchainTransaction[_]] {
+  self: Api[S, T, _] =>
   val confirmations: Int
   val tryEvery: FiniteDuration
 
@@ -36,16 +36,23 @@ trait WithAwaitTransaction[T <: BlockchainTransaction[_]] {
         tx.exists(_.confirmationsCount.exists(_ >= confirmations))
       }).completionTimeout(timeout.duration).runWith(Sink.head).map(_ => ())
   }
+
+  def sendAndWaitForConfirmations(tx: S)(implicit timeout: Timeout, ec: ExecutionContext): Future[Unit] = {
+    for {
+      _ <- sendTx(tx)
+      _ <- waitForConfirmations(tx.id)
+    } yield ()
+  }
 }
 
 object ConsoleFakeNetwork extends Api[BlockchainTransaction[_], BlockchainTransaction[_], BlockchainBlock[BlockchainTransaction[_]]] with StrictLogging {
-  override def sendTx(t: BlockchainTransaction[_], name: String): Future[Unit] = Future.successful {
+  override def sendTx(t: BlockchainTransaction[_]): Future[Unit] = Future.successful {
     t match {
       case wt@WavesTransferTransaction(_, _) =>
-        logger.info(s"Waves transaction $name tx id [${wt.id}]:")
+        logger.info(s"Waves transaction - tx id [${wt.id}]:")
         logger.info(Base58.encode(wt.bytes))
       case bt@BitcoinTransferTransaction(_, _) =>
-        logger.info(s"Bitcoin transaction $name tx id [${bt.id}]:")
+        logger.info(s"Bitcoin transaction - tx id [${bt.id}]:")
         logger.info(Hex.toHexString(bt.bytes))
       case _ =>
     }
