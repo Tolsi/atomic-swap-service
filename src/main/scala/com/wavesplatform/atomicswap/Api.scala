@@ -10,19 +10,32 @@ import org.spongycastle.util.encoders.Hex
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 object Api {
   private implicit val _system: ActorSystem = ActorSystem("api")
   private implicit val _materializer: ActorMaterializer = ActorMaterializer()
 }
+
 trait Api[SendTx <: BlockchainTransaction[_], ReadTx <: BlockchainTransaction[_], Block <: BlockchainBlock[ReadTx]] extends WithAwaitTransaction[SendTx, ReadTx] {
+
   import Api._
+
   implicit protected val system: ActorSystem = _system
   implicit protected val materializer: ActorMaterializer = _materializer
+
   def sendTx(tx: SendTx): Future[Unit]
+
   def getBlock(height: Int): Future[Option[Block]]
+
   def getTransaction(txId: String): Future[Option[ReadTx]]
+
   def height: Future[Long]
+
+  def terminate(): Future[Unit] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    _system.terminate().recoverWith { case NonFatal(_) => _system.whenTerminated }.map(_ => ())
+  }
 }
 
 trait WithAwaitTransaction[S <: BlockchainTransaction[_], T <: BlockchainTransaction[_]] {
@@ -57,10 +70,13 @@ object ConsoleFakeNetwork extends Api[BlockchainTransaction[_], BlockchainTransa
       case _ =>
     }
   }
+
   override def getBlock(height: Int): Future[Option[BlockchainBlock[BlockchainTransaction[_]]]] = ???
 
   override def height: Future[Long] = ???
+
   override val confirmations: Int = ???
   override val tryEvery: FiniteDuration = ???
+
   override def getTransaction(txId: String): Future[Option[BlockchainTransaction[_]]] = ???
 }

@@ -12,5 +12,6 @@ object BitcoinApiTest extends App {
   val f = api.waitForConfirmations("e23260244b54c9a9963f1746fa9e5b00035454efffc1ca980271b0b48a8e9b61")
   Await.result(f, timeout.duration)
   println(System.currentTimeMillis())
-  Await.result(api.getTransaction("asd"), 1 minute)
+  Await.result(api.getTransaction("asd"), 10 seconds)
+  Await.result(api.terminate(), 1 minute)
 }
