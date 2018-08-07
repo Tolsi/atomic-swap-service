@@ -5,11 +5,10 @@ import java.io.IOException
 import com.wavesplatform.atomicswap.{Api, WavesBlock, WavesRpcTransferTransaction, WavesTransferTransaction}
 import com.wavesplatform.wavesj.Node
 
-import scala.concurrent.Future
 import scala.collection.JavaConverters._
-import scala.concurrent.duration._
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class WavesApi(node: String, val confirmations: Int = 10, val tryEvery: FiniteDuration = 1 minute) extends Api[WavesTransferTransaction, WavesRpcTransferTransaction, WavesBlock] {
   private val n = new Node(node)
@@ -29,9 +28,11 @@ class WavesApi(node: String, val confirmations: Int = 10, val tryEvery: FiniteDu
   override def getTransaction(txId: String): Future[Option[WavesRpcTransferTransaction]] = {
     val txF = Future {
       val js = n.getTransaction(txId).asScala
+      val id = js("id").asInstanceOf[String]
       js("type").asInstanceOf[Int] match {
         case 4 => Some(WavesRpcTransferTransaction(WavesTransferTransactionV2(js)))
-        case _ => None
+        // todo fix me
+        case _ => Some(WavesRpcTransferTransaction(null))
       }
     }.recover {
       case _: IOException => None

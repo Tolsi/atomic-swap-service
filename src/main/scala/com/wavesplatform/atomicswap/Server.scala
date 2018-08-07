@@ -2,6 +2,7 @@ package com.wavesplatform.atomicswap
 
 import com.wavesplatform.atomicswap.bitcoin.BitcoinApi
 import com.wavesplatform.atomicswap.waves.WavesApi
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Server extends App {

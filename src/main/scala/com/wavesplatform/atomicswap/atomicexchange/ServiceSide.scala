@@ -1,10 +1,10 @@
 package com.wavesplatform.atomicswap.atomicexchange
 
-import com.wavesplatform.atomicswap.{BitcoinTransferTransaction, ExchangeParams, WavesTransferTransaction}
 import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
 import com.wavesplatform.atomicswap.bitcoin.coinswap.util.TransactionsUtil.{createBackoutTransactionByTimeout, createBackoutTransactionByX}
-import com.wavesplatform.wavesj.{Asset, Base58, PublicKeyAccount, Transaction}
+import com.wavesplatform.atomicswap.{BitcoinTransferTransaction, ExchangeParams, WavesTransferTransaction}
 import com.wavesplatform.wavesj
+import com.wavesplatform.wavesj.{Asset, Base58, PublicKeyAccount, Transaction}
 import org.bitcoinj.core.{Coin, ECKey}
 import org.bitcoinj.script.{Script, ScriptBuilder}
 
@@ -37,7 +37,7 @@ object ServiceSide {
                                     serviceBitcoinPrivateKey: Array[Byte],
                                     bitcoinUserPubKey: Array[Byte])(implicit p: ExchangeParams): BitcoinTransferTransaction = {
     BitcoinTransferTransaction(createBackoutTransactionByTimeout(BitcoinInputInfo(tx2Id, 0, T2script, serviceBitcoinPrivateKey), amount,
-      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.bitcoinNetworkParams)), p.minutesTimeout.toSeconds))
+      ScriptBuilder.createOutputScript(ECKey.fromPublicOnly(bitcoinUserPubKey).toAddress(p.bitcoinNetworkParams)), p.startTimestamp.toSeconds + p.minutesTimeout.toSeconds))
   }
 
   def recoverWavesSwapTransaction(wavesUserTmpPrivateKey: PublicKeyAccount,

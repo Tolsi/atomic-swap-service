@@ -1,9 +1,9 @@
 package com.wavesplatform.atomicswap.bitcoin.coinswap
 
 import com.typesafe.scalalogging.StrictLogging
-import com.wavesplatform.atomicswap.{BitcoinTransferTransaction, ExchangeParams}
 import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
 import com.wavesplatform.atomicswap.bitcoin.coinswap.util.TransactionsUtil.{createXHashUntilTimelockOrToSelfScript, sendMoneyToScript}
+import com.wavesplatform.atomicswap.{BitcoinTransferTransaction, ExchangeParams}
 
 object BitcoinSide extends StrictLogging {
   def createAtomicSwapTransaction(bitcoinUserBitcoinOutInfo: BitcoinInputInfo,

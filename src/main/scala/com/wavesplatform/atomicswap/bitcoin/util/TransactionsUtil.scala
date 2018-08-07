@@ -2,12 +2,10 @@ package com.wavesplatform.atomicswap.bitcoin.util
 
 import com.wavesplatform.atomicswap.ExchangeParams
 import com.wavesplatform.atomicswap.bitcoin.BitcoinInputInfo
-import org.bitcoinj.core._
 import org.bitcoinj.core.Transaction.SigHash
-import org.bitcoinj.script.{Script, ScriptBuilder}
+import org.bitcoinj.core._
 import org.bitcoinj.script.ScriptOpCodes._
-
-import scala.collection.JavaConverters._
+import org.bitcoinj.script.{Script, ScriptBuilder}
 
 object TransactionsUtil {
   def createXHashUntilTimelockOrToSelfScript(digest: Array[Byte], oppositePublicKey: Array[Byte], timeout: Long, myPublicKey: Array[Byte]): Script = {

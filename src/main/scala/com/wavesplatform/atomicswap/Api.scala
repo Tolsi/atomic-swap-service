@@ -8,8 +8,8 @@ import com.typesafe.scalalogging.StrictLogging
 import org.bitcoinj.core.Base58
 import org.spongycastle.util.encoders.Hex
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 object Api {
@@ -40,8 +40,9 @@ trait Api[SendTx <: BlockchainTransaction[_], ReadTx <: BlockchainTransaction[_]
 
 trait WithAwaitTransaction[S <: BlockchainTransaction[_], T <: BlockchainTransaction[_]] {
   self: Api[S, T, _] =>
-  val confirmations: Int
-  val tryEvery: FiniteDuration
+  def confirmations: Int
+
+  def tryEvery: FiniteDuration
 
   def waitForConfirmations(txId: String)(implicit timeout: Timeout, ec: ExecutionContext): Future[Unit] = {
     Source.tick(0.seconds, 1 minute, ()).mapAsync(1)(_ => getTransaction(txId))
@@ -75,8 +76,9 @@ object ConsoleFakeNetwork extends Api[BlockchainTransaction[_], BlockchainTransa
 
   override def height: Future[Long] = ???
 
-  override val confirmations: Int = ???
-  override val tryEvery: FiniteDuration = ???
+  override def confirmations: Int = ???
+
+  override def tryEvery: FiniteDuration = ???
 
   override def getTransaction(txId: String): Future[Option[BlockchainTransaction[_]]] = ???
 }

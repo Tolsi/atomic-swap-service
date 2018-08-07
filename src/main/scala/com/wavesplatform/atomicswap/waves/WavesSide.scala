@@ -7,7 +7,7 @@ object WavesSide {
   def sendMoneyToTempSwapAccount(wavesUser: PrivateKeyAccount,
                                  wavesUserTmpPrivateKey: PublicKeyAccount,
                                  fee: Long
-                               )(implicit p: ExchangeParams): WavesTransferTransaction = {
+                                )(implicit p: ExchangeParams): WavesTransferTransaction = {
     WavesTransferTransaction(Transaction.makeTransferTx(wavesUser, wavesUserTmpPrivateKey.getAddress, p.wavesAmount + p.wavesFee + p.wavesSmartFee, Asset.WAVES, fee, Asset.WAVES, "", p.startTimestamp.toMillis))
   }
 
@@ -18,9 +18,9 @@ object WavesSide {
                                      timeoutHeight: Int,
                                      fee: Long
                                     )(implicit p: ExchangeParams): WavesTransferTransaction = {
-    val wavesSwapScript = AtomicSwapScriptSetScriptTransactionBuilder.build(bitcoinUserWavesAddress, wavesUser.getAddress, wavesUser,
+    val wavesSwapScript = AtomicSwapScriptBuilder.build(bitcoinUserWavesAddress, wavesUser.getAddress, wavesUser,
       p.hashX, timeoutHeight)
-    val wavesSwapScriptCompiled = AtomicSwapScriptSetScriptTransactionBuilder.compile(node, wavesSwapScript)
-    WavesTransferTransaction(Transaction.makeScriptTx(wavesUserTmpPrivateKey, Base64.encode(wavesSwapScriptCompiled), 'T', fee, p.startTimestamp.toMillis + 1))
+    val wavesSwapScriptCompiled = AtomicSwapScriptBuilder.compile(node, wavesSwapScript)
+    WavesTransferTransaction(Transaction.makeScriptTx(wavesUserTmpPrivateKey, Base64.encode(wavesSwapScriptCompiled), p.wavesNetwork.toByte, fee, p.startTimestamp.toMillis + 1))
   }
 }

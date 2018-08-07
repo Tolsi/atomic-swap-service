@@ -11,10 +11,15 @@ import scala.util.Try
 
 sealed trait BlockchainTransaction[T] {
   val underlying: T
-  val id: String
+
+  def id: String
+
   val confirmationsCount: Option[Int]
+
   def bytes: Array[Byte]
+
   def bytesString: String
+
   def stringify: String
 }
 
@@ -22,26 +27,35 @@ case class WavesTransferTransaction(override val underlying: wavesj.Transaction,
   override val id: String = underlying.id
   override val bytes: Array[Byte] = underlying.getBytes
   override val bytesString: String = Base58.encode(bytes)
+
   override def stringify: String = underlying.getJson
 }
 
 case class WavesRpcTransferTransaction(override val underlying: WavesTransferTransactionV2, override val confirmationsCount: Option[Int] = None) extends BlockchainTransaction[WavesTransferTransactionV2] {
-  override val id: String = underlying.id
+  override def id: String = underlying.id
+
   override def bytes: Array[Byte] = ???
+
   override def bytesString: String = ???
+
   override def stringify: String = toString
 }
 
 case class BitcoinTransferTransaction(override val underlying: bitcoinj.core.Transaction, override val confirmationsCount: Option[Int] = None) extends BlockchainTransaction[bitcoinj.core.Transaction] {
   override val id: String = underlying.getHashAsString
   override val bytes: Array[Byte] = underlying.unsafeBitcoinSerialize
+
   override def bytesString: String = Hex.toHexString(bytes)
+
   override def stringify: String = bytesString
 }
 
 case class BitcoinRpcTransaction(id: String, underlying: BitcoindRpcClient.RawTransaction) extends BlockchainTransaction[BitcoindRpcClient.RawTransaction] {
   override def bytes: Array[Byte] = ???
+
   override def bytesString: String = ???
+
   override def stringify: String = toString
+
   override val confirmationsCount: Option[Int] = Try(underlying.confirmations()).toOption
 }
