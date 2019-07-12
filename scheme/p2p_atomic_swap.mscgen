@@ -1,0 +1,48 @@
+hscale="2";
+
+waves_user, waves, bitcoin, bitcoin_user;
+
+waves_user => waves_user : "create secret";
+waves_user -> bitcoin_user : "waves_user_bitcoin_publickey, hash_secret, wtx1_id";
+bitcoin_user => bitcoin_user : "calculate and validate wtx1_id";
+bitcoin_user -> waves_user : "btx1_id, bitcoin_user_waves_publickey";
+waves_user => waves_user : "calculate and validate btx1_id";
+waves_user -> bitcoin_user: "wtx1_id";
+bitcoin_user => bitcoin_user : "wait wtx1 on waves";
+waves_user -> waves : "wtx1: if (block <= height + 35)\nbitcoin_user_waves_publickey && valid_secret\nelse waves_user_publickey";
+waves_user => waves_user : "wait btx1 on bitcoin";
+
+...;
+
+bitcoin_user -> bitcoin: "btx1: if (block <= height + 30)\nwaves_user_bitcoin_publickey && valid_secret\nelse bitcoin_user_publickey";
+
+...;
+
+--- : good case;
+
+waves_user -> bitcoin : "btx2: transfer btx1 to waves_user_bitcoin_publickey and secret"; 
+bitcoin >> waves_user : "exchange money";
+
+bitcoin >> bitcoin_user : "secret from btx2 (or from waves_user)";
+
+bitcoin_user -> waves : "wtx2: transfer wtx1 to bitcoin_user_waves_publickey and secret";
+waves >> bitcoin_user : "exchange money"; 
+
+---: bad case;
+
+...: "wait for timeout h + 30 blocks";
+
+waves_user -> waves : "wtx2: transfer wtx1 to waves_user_publickey"; 
+waves >> waves_user : "money back"; 
+bitcoin_user -> bitcoin : "btx2: transfer btx1 to waves_user_bitcoin_publickey and secret"; 
+bitcoin >> bitcoin_user : "money back";
+
+---: fraud timeout case;
+
+waves_user -> bitcoin : "btx2: transfer btx1 to waves_user_bitcoin_publickey and secret"; 
+bitcoin >> waves_user : "exchange money";
+
+...: "wait for timeout h + 30 blocks";
+
+waves_user -> waves : "wtx2: transfer wtx1 to waves_user_publickey"; 
+waves >> waves_user : "money back"; 

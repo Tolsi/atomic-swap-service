@@ -1,0 +1,68 @@
+hscale="2.5";
+
+waves_user, waves, exchange, bitcoin, bitcoin_user;
+
+exchange => exchange : "create secret";
+
+waves_user -> exchange : "waves_user_bitcoin_publickey";
+bitcoin_user -> exchange : "bitcoin_user_waves_publickey";
+exchange -> bitcoin_user : "waves_user_bitcoin_publickey, hash_secret";
+exchange -> waves_user : "bitcoin_user_waves_publickey, hash_secret";
+
+waves_user -> exchange : "wtx1: if (block <= height + 30)\nbitcoin_user_waves_publickey && valid_secret\nelse waves_user_publickey";
+waves_user -> exchange : "wtx3: transfer wtx1 to waves_user_publickey"; 
+bitcoin_user -> exchange: "btx1: if (block <= height + 35)\nwaves_user_bitcoin_publickey && valid_secret\nelse bitcoin_user_publickey";
+bitcoin_user -> exchange: "btx3: transfer btx1 to bitcoin_user_publickey";
+
+exchange => exchange : "wtx1, wtx3, btx1, btx3 validation";
+
+exchange -> waves_user : "secret";
+exchange -> bitcoin_user : "secret";
+
+waves_user -> exchange : "btx2: transfer btx1 to waves_user_bitcoin_publickey and secret"; 
+bitcoin_user -> exchange : "wtx2: transfer wtx1 to bitcoin_user_waves_publickey and secret";
+
+exchange => exchange : "btx2, wtx2 validation";
+
+--- : good case;
+exchange -> waves : "wtx1";
+waves_user >> waves : "lock money";
+exchange -> bitcoin : "btx1";
+bitcoin_user >> bitcoin : "lock money";
+
+...: "wait for confirmations";
+
+exchange -> waves : "wtx2";
+waves >> bitcoin_user : "exchange money";
+exchange -> bitcoin : "btx2";
+bitcoin >> waves_user : "exchange money";
+
+...: "wait for confirmations";
+
+---: "exchange offline case (if there are wtx1 and btx1 in blockchain)";
+
+...: "wait for timeout";
+
+waves_user -> waves : "wtx3";
+waves >> waves_user : "return money";
+bitcoin_user -> bitcoin : "wtx3";
+bitcoin >> bitcoin_user : "return money";
+
+---: "exchange fraud case";
+exchange => exchange : "create secret";
+waves_user -> exchange : "waves_user_bitcoin_publickey";
+bitcoin_user -> exchange : "bitcoin_user_waves_publickey";
+
+exchange -> bitcoin_user : "exchange_bitcoin_publickey, hash_secret";
+exchange -> waves_user : "exchange_waves_publickey, hash_secret";
+
+waves_user -> exchange : "wtx1: if (block <= height + 30)\nexchange_waves_publickey && valid_secret\nelse waves_user_publickey";
+waves_user -> exchange : "wtx3: transfer wtx1 to waves_user_publickey"; 
+
+bitcoin_user -> exchange: "btx1: if (block <= height + 30)\nexchange_bitcoin_publickey && valid_secret\nelse bitcoin_user_publickey";
+bitcoin_user -> exchange: "btx3: transfer btx1 to bitcoin_user_publickey";
+
+exchange -> bitcoin : "fraud_btx2: transfer btx1 to exchange_bitcoin_publickey and secret"; 
+bitcoin >> exchange : "fraud of money";
+exchange -> waves : "fraud_wtx2: transfer wtx1 to exchange_waves_publickey and secret";
+waves >> exchange : "fraud of money";
